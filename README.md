@@ -1,5 +1,5 @@
 # bigdata-project
-## Analyse intra-day du marché crypto (BTC)
+## Analyse intra-day du marché crypto
 
 Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (événements économiques et variables quantitatives fréquemment utilisées en trading) sur la fluctuation intra-day des cryptomonnaies.
 
