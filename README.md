@@ -27,7 +27,7 @@ git pull
 
 ## Step 3 : Activer le venv
 
-> Vérifier que l'on se situe dans le terminal du bon dossier avant
+> Vérifier que l'on se situe dans le terminal du bon dossier avant, puis activer le venv dans vscode.
 
 * **Windows** :
 
@@ -127,6 +127,3 @@ git push origin main
 ```bash
 git push origin nom_de_branche
 ```
-
-> Ensuite, créer une Pull Request sur GitHub pour fusionner la branche si nécessaire.
-
