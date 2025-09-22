@@ -1,5 +1,9 @@
 # bigdata-project
-This Python project analyzes intraday cryptocurrency price fluctuations by examining economic events, and quantitative indicators.
+## Analyse intra-day du marché crypto (BTC)
+
+Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (événements économiques et variables quantitatives fréquemment utilisées en trading) sur la fluctuation intra-day des cryptomonnaies.
+
+Pour cela, nous optons pour une programmation orientée objet, qui permet la réutilisation et le déploiement potentiel de notre stratégie sur différentes cryptomonnaies. L’architecture objet facilitera également l’ajout futur de nouvelles variables, indicateurs ou sources de données, ainsi que la modularité nécessaire pour tester et améliorer notre modèle de manière efficace.
 
 # Processus de collaboration pour le projet (Mac et Windows)
  
