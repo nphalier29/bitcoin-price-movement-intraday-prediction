@@ -13,21 +13,24 @@ class BinanceData:
         return: DataFrame pandas avec les données 
         """
         try:
+            max_limit = 1000 #limite de données par requête binance
+            limit = min(288 * days, max_limit)
+
             data = self.client.get_klines(
                 symbol=symbol,
                 interval=Client.KLINE_INTERVAL_5MINUTE,
-                limit=288 * days
+                limit=limit
             )
+
+            # Conversion en DataFrame
             df = pd.DataFrame(data, columns=[
-                "open_time", "open", "high", "low", "close", "volume", 
-                "close_time", "quote_asset_volume", "number_of_trades", 
+                "open_time", "open", "high", "low", "close", "volume",
+                "close_time", "quote_asset_volume", "number_of_trades",
                 "taker_buy_base", "taker_buy_quote", "ignore"
             ])
+
             return df
+        
         except Exception as e:
             print(f"Erreur lors de la récupération des données: {e}")
             return None
-
-binance_data = BinanceData()
-data = binance_data.load_data(symbol="BTCUSDT")
-print(data.head())
