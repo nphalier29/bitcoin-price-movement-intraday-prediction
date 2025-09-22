@@ -1,7 +1,7 @@
 # bigdata-project
 This Python project analyzes intraday cryptocurrency price fluctuations by examining economic events, and quantitative indicators.
 
-# Processus de collaboration pour le projet (Mac et Windows)"
+# Processus de collaboration pour le projet (Mac et Windows)
  
 
 ## Step 1 : Ouvrir le terminal
