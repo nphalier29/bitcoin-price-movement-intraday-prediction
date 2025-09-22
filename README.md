@@ -1,14 +1,13 @@
 # bigdata-project
 ## Analyse intra-day du marché crypto
 
-Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (événements économiques et variables quantitatives fréquemment utilisées en trading) sur la fluctuation intra-day des cryptomonnaies.
+Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (qualitatives comme les événements économiques et quantitatives fréquemment utilisées en trading comme RSI ...) sur la fluctuation intra-day des cryptomonnaies.
 
-Pour cela, nous optons pour une programmation orientée objet, qui permet la réutilisation et le déploiement potentiel de notre stratégie sur différentes cryptomonnaies. L’architecture objet facilitera également l’ajout futur de nouvelles variables, indicateurs ou sources de données, ainsi que la modularité nécessaire pour tester et améliorer notre modèle de manière efficace.
+Pour cela, nous optons pour une programmation orientée objet (POO), qui permet la réutilisation et le déploiement potentiel de notre stratégie sur différentes cryptomonnaies. L’architecture objet facilitera également l’ajout futur de nouvelles variables ou indicateurs, ainsi que la modularité nécessaire pour tester, corriger et améliorer notre modèle de manière efficace.
 
-# Processus de collaboration pour le projet (Mac et Windows)
- 
+## Processus de collaboration pour le projet (Mac et Windows)
 
-## Step 1 : Ouvrir le terminal
+### Step 1 : Ouvrir le terminal
 - **Mac** : Terminal  
 - **Windows** : PowerShell (ou Terminal intégré de VSCode)  
 
@@ -19,7 +18,7 @@ cd chemin/vers/le/projet
 
 ---
 
-## Step 2 : Mettre à jour le projet
+### Step 2 : Mettre à jour le projet
 
 Récupérer les dernières modifications depuis GitHub :
 
@@ -29,7 +28,7 @@ git pull
 
 ---
 
-## Step 3 : Activer le venv
+### Step 3 : Activer le venv
 
 > Vérifier que l'on se situe dans le terminal du bon dossier avant, puis activer le venv dans vscode.
 
@@ -54,7 +53,7 @@ deactivate
 
 ---
 
-## Step 4 : Installer les dépendances
+### Step 4 : Installer les dépendances
 
 Si de nouveaux packages ont été ajoutés dans `requirements.txt` :
 
@@ -66,7 +65,7 @@ pip install -r requirements.txt
 
 ---
 
-## Step 5 : Coder
+### Step 5 : Coder
 
 * Modifier ou ajouter des fichiers Python.
 * Pour l'ajout de nouveaux packages :
@@ -83,7 +82,7 @@ pip freeze > requirements.txt
 
 ---
 
-## Step 6 : Sauvegarder le code
+### Step 6 : Sauvegarder le code
 
 * Sauvegarder tes fichiers (`Ctrl + S` ou `Cmd + S`).
 * Revenir dans le terminal et se placer dans le dossier du projet si nécessaire :
@@ -94,7 +93,7 @@ cd chemin/vers/le/projet
 
 ---
 
-## Step 7 : Ajouter les fichiers au commit
+### Step 7 : Ajouter les fichiers au commit
 
 * Ajouter tous les fichiers modifiés/nouveaux :
 
@@ -110,7 +109,7 @@ git add nom_du_fichier
 
 ---
 
-## Step 8 : Créer le commit
+### Step 8 : Créer le commit
 
 ```bash
 git commit -m "update (choisir sa propre phrase)"
@@ -118,7 +117,7 @@ git commit -m "update (choisir sa propre phrase)"
 
 ---
 
-## Step 9 : Pousser les modifications sur GitHub
+### Step 9 : Pousser les modifications sur GitHub
 
 * **Sur la branche principale (main)** :
 
