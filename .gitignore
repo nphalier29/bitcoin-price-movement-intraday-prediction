@@ -19,3 +19,25 @@ __pycache__/
 # IDE / editor
 .vscode/
 .idea/
+
+# Fichiers temporaires Excel / Office
+~$*
+*.tmp
+*.~lock.*
+
+# Dossier avec fichiers lourds
+doc/
+
+# PDFs lourds à ignorer
+*.pdf
+
+# macOS
+.DS_Store
+
+# Python (si tu as du code Python)
+__pycache__/
+*.py[cod]
+*.pyo
+
+# En général, fichiers temporaires et logs
+*.log
