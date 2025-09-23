@@ -8,20 +8,17 @@ class CleanData:
         ]
 
     def clean_klines_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Nettoie un DataFrame de klines (Binance) :
-        - Garde uniquement les colonnes utiles.
-        - Convertit les timestamps en datetime.
-        - Convertit les colonnes numériques en float.
-        """
+        cleaned = data[self.useful_columns].copy()
 
-        cleaned_data = data[self.useful_columns].copy()
+        cleaned = cleaned.set_index("open_time")
+        cleaned.index = pd.to_datetime(cleaned.index, unit="ms")
+        cleaned.index.name = "open_time"
 
-        cleaned_data["open_time"] = pd.to_datetime(cleaned_data["open_time"], unit="ms")
-        cleaned_data["close_time"] = pd.to_datetime(cleaned_data["close_time"], unit="ms")
+        cleaned["close_time"] = pd.to_datetime(cleaned["close_time"], unit="ms")
 
-        numeric_cols = ["open", "high", "low", "close", "volume", "quote_asset_volume","number_of_trades", "taker_buy_quote"]
-        for col in numeric_cols:
-            cleaned_data[col] = pd.to_numeric(cleaned_data[col])
+        numeric_cols = ["open", "high", "low", "close", "volume",
+                        "quote_asset_volume", "number_of_trades", "taker_buy_quote"]
+        cleaned[numeric_cols] = cleaned[numeric_cols].apply(pd.to_numeric, errors="coerce")
 
-        return cleaned_data
+        return cleaned
+
