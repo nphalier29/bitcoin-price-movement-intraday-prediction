@@ -12,25 +12,18 @@ class CryptoModel:
         """
         df : DataFrame contenant toutes les features et la target 'target'
         """
-        self.df = df.copy()
+        self.df = df.copy().dropna()
         self.model = None
         self.scaler = None
 
-
-        # Exclure colonnes temporelles + garder uniquement numériques
-        self.feature_names = [
-            col for col in df.columns
-            if col not in ['target', 'open_time', 'close_time']
-            and pd.api.types.is_numeric_dtype(df[col])
-        ]
-
-
+        self.feature_names = [col for col in self.df.columns if col != 'target']
+        
     def logistic_regression(self, test_size=0.2, random_state=42, verbose=True):
         """
         Régression logistique binaire
         """
 
-        
+
         X = self.df[self.feature_names].values
         y = self.df['target'].values
 
