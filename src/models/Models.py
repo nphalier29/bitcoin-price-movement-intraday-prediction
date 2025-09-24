@@ -29,6 +29,8 @@ class CryptoModel:
         """
         Régression logistique binaire
         """
+
+        
         X = self.df[self.feature_names].values
         y = self.df['target'].values
 
