@@ -28,9 +28,14 @@ git pull
 
 ---
 
-### Step 3 : Activer le venv
+### Step 3 : Créer et activer le venv
 
-> Vérifier que l'on se situe dans le terminal du bon dossier avant, puis activer le venv dans vscode.
+> Pour créer un venv.
+
+```powershell
+python -m venv venv
+```
+> Pour activer le venv dans vscode.
 
 * **Windows** :
 
