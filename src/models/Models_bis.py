@@ -1,60 +1,99 @@
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from xgboost import XGBClassifier
-import matplotlib.pyplot as plt
-
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+from itertools import product
 
 class CryptoModel:
-    def __init__(self, df):
+    """Classe pour entraîner et évaluer un modèle de classification binaire (XGBoost) avec une approche de fenêtre glissante."""
+
+    def __init__(self, df: pd.DataFrame, target_col: str = "target", lag: int = 1):
         """
-        df : DataFrame contenant toutes les features et la target 'target'
+        df : DataFrame contenant les features et la cible.
+        target_col : colonne cible (0/1).
+        lag : décalage de la cible.
         """
-        self.df = df.copy().dropna()
-        self.model = None
-        self.scaler = None
+        self.df = df.copy()
+        self.target_col = target_col
+        self.lag = lag
 
-        self.features = [col for col in self.df.columns if col != 'target']
+        self.df[target_col] = self.df[target_col].shift(-lag)
 
-    def xgboost_classification(self, verbose=True,  test_size=0.2,  random_state=42,):
+        self.df.dropna(inplace=True)
+
+        self.X = self.df.drop(columns=[target_col])
+        self.y = self.df[target_col]
+
+        # Normalisation
+        self.scaler = StandardScaler()
+        self.X_scaled = pd.DataFrame(
+            self.scaler.fit_transform(self.X),
+            columns=self.X.columns,
+            index=self.X.index
+        )
+
+    def rolling_xgboost(self, months_train: int = 7, weeks_test: int = 1, param_grid: dict = None):
         """
-        Classification binaire avec XGBoost
+        Entraîne et évalue un modèle XGBoost avec une approche de fenêtre glissante.
+
+        months_train : durée d'entraînement (en mois).
+        weeks_test : durée de test (en semaines).
+        param_grid : dict d'hyperparamètres à tester.
         """
-        X = self.df[self.features].values
-        y = self.df['target'].values
+        if param_grid is None:
+            param_grid = {
+                "max_depth": [3, 5],
+                "learning_rate": [0.1, 0.01],
+                "n_estimators": [100]
+            }
 
-        split_idx = int(len(X) * 0.8)
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
+        results = []
 
-        scaler = StandardScaler()
+        # Génération de toutes les combinaisons d'hyperparamètres
+        param_combinations = list(product(*param_grid.values()))
+        param_keys = list(param_grid.keys())
 
-        X_train_scaled = scaler.fit_transform(X_train)
+        start_date = self.df.index.min()
+        end_date = self.df.index.max()
 
-        self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
-        self.model.fit(X_train_scaled, y_train)
-        
-        X_test_scaled = scaler.transform(X_test)
+        # Découpage par rolling window
+        current_start = start_date
+        while True:
+            train_end = current_start + pd.DateOffset(months=months_train)
+            test_end = train_end + pd.DateOffset(weeks=weeks_test)
 
-        y_pred = self.model.predict(X_test_scaled)
+            if test_end > end_date:
+                break
 
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, zero_division=0)
-        rec = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-        cm = confusion_matrix(y_test, y_pred)
+            # Séparation train/test
+            X_train = self.X_scaled.loc[current_start:train_end]
+            y_train = self.y.loc[current_start:train_end]
+            X_test = self.X_scaled.loc[train_end:test_end]
+            y_test = self.y.loc[train_end:test_end]
 
-        print("=== XGBoost Classification Metrics ===")
-        print(f"Accuracy : {acc:.4f}")
-        print(f"Precision: {prec:.4f}")
-        print(f"Recall   : {rec:.4f}")
-        print(f"F1-score : {f1:.4f}")
-        print("Confusion Matrix:")
-        print(cm)
+            for params in param_combinations:
+                param_dict = dict(zip(param_keys, params))
+                model = XGBClassifier(use_label_encoder=False, eval_metric="logloss", **param_dict)
 
-        return 
-    
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                y_proba = model.predict_proba(X_test)[:, 1]
 
-# Scaler les données pour le logitic regression
+                results.append({
+                    "train_start": current_start,
+                    "train_end": train_end,
+                    "test_end": test_end,
+                    **param_dict,
+                    "accuracy": accuracy_score(y_test, y_pred),
+                    "f1": f1_score(y_test, y_pred),
+                    "roc_auc": roc_auc_score(y_test, y_proba),
+                    "y_true": y_test.values,
+                    "y_pred": y_pred,
+                    "y_proba": y_proba
+                })
+
+            # Décalage de la fenêtre
+            current_start = current_start + pd.DateOffset(weeks=weeks_test)
+
+        return pd.DataFrame(results)

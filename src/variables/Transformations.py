@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class Returns:
+class Transformations:
     
     @staticmethod
     def return_(prices):
@@ -26,3 +26,4 @@ class Returns:
         prices = pd.Series(prices).astype(float)
         cum_log_returns = np.log(prices / prices.shift(10))
         return cum_log_returns.tolist()
+    
