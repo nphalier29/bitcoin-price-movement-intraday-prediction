@@ -41,13 +41,13 @@ class TradingIndicators:
         window: int = 20,
         num_std: float = 2.0,
         upper_col: str = "Bollinger_Upper",
-        sma_col: str = "Bollinger_SMA",
+        #sma_col: str = "Bollinger_SMA",
         lower_col: str = "Bollinger_Lower"
     ) -> pd.DataFrame:
         """Ajoute les bandes de Bollinger au DataFrame. Permet d'identifier les conditions de surachat et de survente."""
         sma = df[price_col].rolling(window=window).mean()
         rolling_std = df[price_col].rolling(window=window).std()
-        df[sma_col] = sma
+        #df[sma_col] = sma
         df[upper_col] = sma + num_std * rolling_std
         df[lower_col] = sma - num_std * rolling_std
         return df
@@ -96,7 +96,7 @@ class TradingIndicators:
     
     @staticmethod
     def add_volume_pressure(df: pd.DataFrame, taker_buy_col: str = "taker_buy_quote", total_volume_col: str = "quote_asset_volume", new_col: str = "Volume_Pressure") -> pd.DataFrame:
-        """Ajoute une colonne Volume Pressure au DataFrame. Cela mesure la pression d'achat basée sur le volume.  """
+        """Ajoute une colonne Volume Pressure au DataFrame. Cela mesure la pression d'achat basée sur le volume."""
         df[new_col] = df[taker_buy_col] / (df[total_volume_col] + 1e-10)
         return df
 

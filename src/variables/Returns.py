@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class QuantitativeFunc:
+class Returns:
     
     @staticmethod
     def return_(prices):
