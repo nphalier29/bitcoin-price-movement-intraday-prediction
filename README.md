@@ -1,5 +1,4 @@
-# bigdata-project
-## Analyse intra-day du marché crypto
+# Analyse intra-day du marché crypto
 
 Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (qualitatives comme les événements économiques et quantitatives fréquemment utilisées en trading comme RSI ...) sur la fluctuation intra-day des cryptomonnaies.
 
@@ -28,9 +27,14 @@ git pull
 
 ---
 
-### Step 3 : Activer le venv
+### Step 3 : Créer et activer le venv
 
-> Vérifier que l'on se situe dans le terminal du bon dossier avant, puis activer le venv dans vscode.
+> Pour créer un venv.
+
+```powershell
+python -m venv venv
+```
+> Pour activer le venv dans vscode.
 
 * **Windows** :
 
