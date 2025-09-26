@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from itertools import product
 
 class CryptoModel:
+
     """Classe pour entraîner et évaluer un modèle de classification binaire (XGBoost) avec une approche de fenêtre glissante."""
 
     def __init__(self, df: pd.DataFrame, target_col: str = "target", lag: int = 1):
