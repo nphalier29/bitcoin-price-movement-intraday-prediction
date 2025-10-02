@@ -1,136 +1,106 @@
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from xgboost import XGBClassifier
-import matplotlib.pyplot as plt
-
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+import optuna
+from optuna.samplers import TPESampler
 
 class CryptoModel:
-    def __init__(self, df):
+
+    """Classe pour entraîner et évaluer un modèle de classification binaire (XGBoost) avec une approche de fenêtre glissante."""
+
+    def __init__(self, df: pd.DataFrame, target_col: str = "target", lag: int = 1):
         """
-        df : DataFrame contenant toutes les features et la target 'target'
+        df : DataFrame contenant les features et la cible.
+        target_col : colonne cible (0/1).
+        lag : décalage de la cible. Nous pouvons ajuster ce lag en fonction de l'horizon de prédiction souhaité. Par exemple, un lag de 1 signifie que nous essayons de prédire la valeur de la cible pour le prochain intervalle de temps (par exemple, la prochaine valeur à 5 minutes dans notre cas) en utilisant les données actuelles.
         """
-        self.df = df.copy().dropna()
-        self.model = None
-        self.scaler = None
+        self.df = df.copy()
+        self.target_col = target_col
+        self.lag = lag
 
-        self.feature_names = [col for col in self.df.columns if col != 'target']
-        
-    def logistic_regression(self, test_size=0.2, random_state=42, verbose=True):
-        """
-        Régression logistique binaire
-        """
+        self.df[target_col] = self.df[target_col].shift(-lag)
 
+        self.df.dropna(inplace=True)
 
-        X = self.df[self.feature_names].values
-        y = self.df['target'].values
+        self.X = self.df.drop(columns=[target_col])
+        self.y = self.df[target_col]
 
-
-        split_idx = int(len(X)*(1-test_size))
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
-
-
+        # Normalisation des features : permet de mettre toutes les variables sur la même échelle pour améliorer la performance et la stabilité du modèle.
         self.scaler = StandardScaler()
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
-
-
-        self.model = LogisticRegression(class_weight='balanced', random_state=random_state, max_iter=1000)
-        self.model.fit(X_train_scaled, y_train)
-
-
-        y_pred = self.model.predict(X_test_scaled)
-
-
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, zero_division=0)
-        rec = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-        cm = confusion_matrix(y_test, y_pred)
-
-
-        if verbose:
-            print("=== Logistic Regression Metrics ===")
-            print(f"Accuracy : {acc:.4f}")
-            print(f"Precision: {prec:.4f}")
-            print(f"Recall   : {rec:.4f}")
-            print(f"F1-score : {f1:.4f}")
-            print("Confusion Matrix:")
-            print(cm)
-
-
-        return self.model
-
-
-    def xgboost_classification(self, test_size=0.2, random_state=42, verbose=True, plot_importance=True):
-        """
-        Classification avec XGBoost
-        """
-        X = self.df[self.feature_names].values
-        y = self.df['target'].values
-
-
-        split_idx = int(len(X)*(1-test_size))
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
-
-
-        self.model = XGBClassifier(
-            objective='binary:logistic',
-            eval_metric='logloss',
-            random_state=random_state,
-            use_label_encoder=False,
-            n_estimators=300,
-            learning_rate=0.05,
-            max_depth=5,
-            subsample=0.8,
-            colsample_bytree=0.8
+        self.X_scaled = pd.DataFrame(
+            self.scaler.fit_transform(self.X),
+            columns=self.X.columns,
+            index=self.X.index
         )
 
 
-        self.model.fit(X_train, y_train)
-        y_pred = self.model.predict(X_test)
+    def rolling_xgboost(self, months_train: int = 4, weeks_test: int = 4, n_trials: int = 100):
+        """
+        Entraîne et évalue un modèle XGBoost avec une approche de fenêtre glissante et optimisation des hyperparamètres avec Optuna.
+        months_train : durée d'entraînement (en mois).
+        weeks_test : durée de test (en semaines).
+        n_trials : nombre d'essais pour l'optimisation des hyperparamètres.
+        """
+        results = []
+        start_date = self.df.index.min()
+        end_date = self.df.index.max()
+        # Découpage par rolling window
+        current_start = start_date
+        window_count = 0
+        while True:
+            window_count += 1
+            train_end = current_start + pd.DateOffset(months=months_train)
+            test_end = train_end + pd.DateOffset(weeks=weeks_test)
+            if test_end > end_date:
+                break
+            print(f"Train: {current_start.date()} to {train_end.date()}, Test: {train_end.date()} to {test_end.date()}")
+            print("je suis à la fenêtre n°", window_count)
+            # Séparation train/test
+            X_train = self.X_scaled.loc[current_start:train_end]
+            y_train = self.y.loc[current_start:train_end]
+            X_test = self.X_scaled.loc[train_end:test_end]
+            y_test = self.y.loc[train_end:test_end]
 
+            def objective(trial):
+                params = {
+                    "max_depth": trial.suggest_int("max_depth", 3, 10),
+                    "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+                    "n_estimators": trial.suggest_int("n_estimators", 50, 500),
+                    "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+                    "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+                    "gamma": trial.suggest_int("gamma", 0, 5),
+                    "min_child_weight": trial.suggest_int("min_child_weight", 1, 10)
+                }
+                model = XGBClassifier(use_label_encoder=False, eval_metric="logloss", **params)
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                y_proba = model.predict_proba(X_test)[:, 1]
+                f1 = f1_score(y_test, y_pred)
+                return f1
 
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, zero_division=0)
-        rec = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-        cm = confusion_matrix(y_test, y_pred)
+            study = optuna.create_study(direction="maximize", sampler=TPESampler())
+            study.optimize(objective, n_trials=n_trials)
 
-
-        if verbose:
-            print("=== XGBoost Metrics ===")
-            print(f"Accuracy : {acc:.4f}")
-            print(f"Precision: {prec:.4f}")
-            print(f"Recall   : {rec:.4f}")
-            print(f"F1-score : {f1:.4f}")
-            print("Confusion Matrix:")
-            print(cm)
-
-
-            importances = self.model.feature_importances_
-            importance_df = pd.DataFrame({
-                'feature': self.feature_names,
-                'importance': importances
-            }).sort_values(by='importance', ascending=False)
-
-
-            print("\n=== Feature Importances ===")
-            print(importance_df)
-
-
-            if plot_importance:
-                plt.figure(figsize=(10, 6))
-                plt.barh(importance_df['feature'], importance_df['importance'])
-                plt.xlabel("Importance")
-                plt.ylabel("Feature")
-                plt.title("XGBoost Feature Importances")
-                plt.gca().invert_yaxis()
-                plt.show()
-
-
-        return self.model
+            # Get the best parameters
+            best_params = study.best_params
+            model = XGBClassifier(use_label_encoder=False, eval_metric="logloss", **best_params)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            y_proba = model.predict_proba(X_test)[:, 1]
+            results.append({
+                "train_start": current_start,
+                "train_end": train_end,
+                "test_end": test_end,
+                **best_params,
+                "accuracy": accuracy_score(y_test, y_pred),
+                "f1": f1_score(y_test, y_pred),
+                "roc_auc": roc_auc_score(y_test, y_proba),
+                "y_true": y_test.values,
+                "y_pred": y_pred,
+                "y_proba": y_proba
+            })
+            # Décalage de la fenêtre
+            current_start = current_start + pd.DateOffset(weeks=weeks_test)
+        return pd.DataFrame(results)
