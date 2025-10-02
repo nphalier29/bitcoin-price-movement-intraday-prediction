@@ -4,12 +4,11 @@ import pandas as pd
 class TradingIndicators:
     """Classe pour ajouter des indicateurs techniques aux données de trading."""
 
-    # On a deja ajouté la SMA via les bandes de Bollinger.
-    # @staticmethod
-    # def add_sma(df: pd.DataFrame, price_col: str = "close", window: int = 20, new_col: str = "SMA_20") -> pd.DataFrame:
-    #     """Ajoute une colonne SMA au DataFrame."""
-    #     df[new_col] = df[price_col].rolling(window=window).mean()
-    #     return df
+    @staticmethod
+    def add_sma(df: pd.DataFrame, price_col: str = "close", window: int = 20, new_col: str = "SMA_20") -> pd.DataFrame:
+        """Ajoute une colonne SMA au DataFrame."""
+        df[new_col] = df[price_col].rolling(window=window).mean()
+        return df
 
     @staticmethod
     def add_ema(df: pd.DataFrame, price_col: str = "close", window: int = 12, new_col: str = "EMA_12") -> pd.DataFrame:
@@ -35,12 +34,13 @@ class TradingIndicators:
         return df
 
     @staticmethod
-    def add_bollinger_bands(
+    def add_bollinger_bands_width(
         df: pd.DataFrame,
         price_col: str = "close",
         window: int = 20,
         num_std: float = 2.0,
         upper_col: str = "Bollinger_Upper",
+        bb_width: str = "BB_width",
         #sma_col: str = "Bollinger_SMA",
         lower_col: str = "Bollinger_Lower"
     ) -> pd.DataFrame:
@@ -48,8 +48,7 @@ class TradingIndicators:
         sma = df[price_col].rolling(window=window).mean()
         rolling_std = df[price_col].rolling(window=window).std()
         #df[sma_col] = sma
-        df[upper_col] = sma + num_std * rolling_std
-        df[lower_col] = sma - num_std * rolling_std
+        df[bb_width] = sma + num_std * rolling_std - sma - num_std * rolling_std
         return df
 
     @staticmethod
