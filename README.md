@@ -1,6 +1,6 @@
 # Analyse intra-day du marché crypto
 
-Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (qualitatives comme les événements économiques et quantitatives fréquemment utilisées en trading comme RSI ...) sur la fluctuation intra-day des cryptomonnaies.
+Notre objectif est de développer, en Python, un algorithme capable d’analyser l’impact de différentes variables (quantitatives fréquemment utilisées en trading comme RSI, MACD ...) sur la fluctuation intra-day des cryptomonnaies.
 
 Pour cela, nous optons pour une programmation orientée objet (POO), qui permet la réutilisation et le déploiement potentiel de notre stratégie sur différentes cryptomonnaies. L’architecture objet facilitera également l’ajout futur de nouvelles variables ou indicateurs, ainsi que la modularité nécessaire pour tester, corriger et améliorer notre modèle de manière efficace.
 
