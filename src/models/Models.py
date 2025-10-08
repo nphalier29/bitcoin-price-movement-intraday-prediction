@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
@@ -65,13 +64,13 @@ class CryptoModel:
 
             def objective(trial):
                 params = {
-                    "max_depth": trial.suggest_int("max_depth", 3, 10),
+                    "max_depth": trial.suggest_int("max_depth", 4, 6),
                     "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
                     "n_estimators": trial.suggest_int("n_estimators", 50, 500),
                     "subsample": trial.suggest_float("subsample", 0.5, 1.0),
                     "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
                     "gamma": trial.suggest_int("gamma", 0, 5),
-                    "min_child_weight": trial.suggest_int("min_child_weight", 1, 10)
+                    "min_child_weight": trial.suggest_int("min_child_weight", 10, 50)
                 }
                 model = XGBClassifier(use_label_encoder=False, eval_metric="logloss", **params)
                 model.fit(X_train, y_train)
@@ -104,128 +103,4 @@ class CryptoModel:
             # Décalage de la fenêtre
             current_start = current_start + pd.DateOffset(weeks=weeks_test)
         return pd.DataFrame(results)
-    
-
-    
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-from sklearn.metrics import mean_squared_error
-import matplotlib.pyplot as plt
-
-    
-class LSTMForecaster:
-    def __init__(self, data, seq_length=5, forecast_horizon=1, epochs=500, batch_size=32):
-        self.data = data
-        self.seq_length = seq_length
-        self.forecast_horizon = forecast_horizon
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.model = None
-        self.history = None
-
-    def build_sequences(self):
-        X, y = [], []
-        for t in range(len(self.data) - self.seq_length - self.forecast_horizon + 1):
-            X.append(self.data[t:t+self.seq_length])
-            y.append(self.data[t+self.seq_length:t+self.seq_length+self.forecast_horizon])
-        X = np.array(X).reshape(-1, self.seq_length, 1)
-        y = np.array(y)
-        return X, y
-
-    def train_test_split(self, X, y, test_size=0.2):
-        split_idx = int(len(X)*(1-test_size))
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
-        return X_train, X_test, y_train, y_test
-
-    def build_model(self):
-        model = Sequential([
-            LSTM(64, input_shape=(self.seq_length, 1), return_sequences=True),
-            Dropout(0.2),
-            LSTM(32),
-            Dropout(0.2),
-            Dense(self.forecast_horizon)
-        ])
-        model.compile(optimizer='adam', loss='mse')
-        self.model = model
-        return model
-
-    def fit(self, validation_split=0.2, verbose=1):
-        X, y = self.build_sequences()
-        X_train, X_test, y_train, y_test = self.train_test_split(X, y)
-        self.X_test = X_test
-        self.y_test = y_test
-
-        self.build_model()
-        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-
-        self.history = self.model.fit(
-            X_train, y_train,
-            epochs=self.epochs,
-            batch_size=self.batch_size,
-            validation_split=validation_split,
-            callbacks=[early_stopping],
-            verbose=verbose
-        )
-        return self.history
-
-    def evaluate(self):
-        yhat = self.model.predict(self.X_test)
-        yhat = yhat[:,0] if self.forecast_horizon == 1 else yhat
-        mse = mean_squared_error(self.y_test, yhat)
-        print("MSE:", mse)
-        plt.figure(figsize=(12,5))
-        plt.plot(self.y_test, label="True")
-        plt.plot(yhat, label="Predicted", color="green")
-        plt.title("LSTM Forecast")
-        plt.legend()
-        plt.show()
-        return mse
-
-    def plot_loss(self):
-        plt.figure(figsize=(10,5))
-        plt.plot(self.history.history["loss"], label="loss")
-        plt.plot(self.history.history["val_loss"], label="val_loss")
-        plt.title("Training Loss")
-        plt.legend()
-        plt.show()
-
-def predict_next_return(self, last_sequence):
-    """
-Prédit la prochaine valeur à partir de la dernière séquence connue
-et calcule le rendement relatif par rapport à la dernière valeur connue.
-
-Args:
-    last_sequence : liste ou array de longueur seq_length
-                    contenant les dernières valeurs de la série
-
-Returns:
-    predicted_return : rendement relatif (float)
-                        >0 si prix prédit > dernière bougie
-                        <0 si prix prédit < dernière bougie
-"""
-
-# Vérification de la longueur
-
-if len(last_sequence) != self.seq_length:
-    raise ValueError(f"last_sequence doit avoir une longueur de {self.seq_length}")
-
-# Conversion en array et reshape pour LSTM
-seq = np.array(last_sequence).reshape(1, self.seq_length, 1)
-
-# Prédiction
-yhat = self.model.predict(seq, verbose=0)
-
-# Récupère la première valeur prédite si forecast_horizon >1
-predicted_price = yhat[0,0] if self.forecast_horizon == 1 else yhat[0,0]
-
-# Dernière valeur connue
-last_price = last_sequence[-1]
-
-# Calcul du rendement relatif
-predicted_return = (predicted_price - last_price) / last_price
-
-    return predicted_return
 
